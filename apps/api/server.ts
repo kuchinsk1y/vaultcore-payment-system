@@ -26,16 +26,33 @@ fastify.get('/health/db', async (request, reply) => {
   }
 });
 
+import { webhookRoutes } from '../../src/modules/webhooks/webhooks.routes';
+
 // Register routes
 fastify.register(userRoutes, { prefix: '/users' });
 fastify.register(accountRoutes, { prefix: '/accounts' });
 fastify.register(transferRoutes, { prefix: '/transfers' });
+fastify.register(webhookRoutes, { prefix: '/webhooks' });
+
+import { OutboxWorker } from '../../src/infrastructure/workers/outbox.worker';
 
 const start = async () => {
+  let outboxWorker: OutboxWorker;
+  
   try {
     const port = parseInt(process.env.PORT || '3000', 10);
     await fastify.listen({ port, host: '0.0.0.0' });
     fastify.log.info(`Server listening on port ${port}`);
+
+    // Start background workers
+    outboxWorker = new OutboxWorker(fastify.log);
+    outboxWorker.start();
+    
+    // Graceful shutdown hook
+    fastify.addHook('onClose', async () => {
+      outboxWorker.stop();
+    });
+    
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

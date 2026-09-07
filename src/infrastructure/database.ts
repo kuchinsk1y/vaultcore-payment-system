@@ -46,12 +46,43 @@ export interface LedgerEntriesTable {
   created_at: Generated<Date>;
 }
 
+export interface IdempotencyKeysTable {
+  key: string;
+  response_status: number;
+  response_body: any; // JSONB
+  created_at: Generated<Date>;
+}
+
+export interface OutboxEventsTable {
+  id: Generated<string>;
+  aggregate_type: string;
+  aggregate_id: string;
+  event_type: string;
+  payload: any; // JSONB
+  status: Generated<string>;
+  created_at: Generated<Date>;
+  processed_at: Date | null;
+}
+
+export interface WebhookEventsTable {
+  id: Generated<string>;
+  provider_event_id: string;
+  event_type: string;
+  payload: any; // JSONB
+  status: Generated<string>;
+  created_at: Generated<Date>;
+  processed_at: Date | null;
+}
+
 export interface Database {
   users: UsersTable;
   accounts: AccountsTable;
   transfers: TransfersTable;
   ledger_transactions: LedgerTransactionsTable;
   ledger_entries: LedgerEntriesTable;
+  idempotency_keys: IdempotencyKeysTable;
+  outbox_events: OutboxEventsTable;
+  webhook_events: WebhookEventsTable;
 }
 
 const dialect = new PostgresDialect({

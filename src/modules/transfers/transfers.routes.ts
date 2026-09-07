@@ -13,14 +13,38 @@ const CreateTransferSchema = z.object({
 export const transferRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post('/', async (request, reply) => {
     try {
+      const idempotencyKey = request.headers['idempotency-key'] as string | undefined;
+
+      if (!idempotencyKey) {
+        return reply.status(400).send({ error: 'Bad Request', message: 'Missing Idempotency-Key header' });
+      }
+
+      // Check if idempotency key exists
+      const existingIdempotency = await db
+        .selectFrom('idempotency_keys')
+        .select(['response_status', 'response_body'])
+        .where('key', '=', idempotencyKey)
+        .executeTakeFirst();
+
+      if (existingIdempotency) {
+        return reply.status(existingIdempotency.response_status).send(existingIdempotency.response_body);
+      }
+
       const data = CreateTransferSchema.parse(request.body);
       
       if (data.source_account_id === data.destination_account_id) {
-        return reply.status(400).send({ error: 'Bad Request', message: 'Cannot transfer to the same account' });
+        throw new Error('SAME_ACCOUNT_TRANSFER');
       }
 
       // Start transaction
       const transfer = await db.transaction().execute(async (trx) => {
+        // Double-check idempotency key inside the transaction with a lock to prevent concurrent requests 
+        // with the same idempotency key from proceeding. We don't want two concurrent transfers.
+        // Wait, Postgres doesn't lock on non-existent rows unless it's a serializable transaction or we insert.
+        // So we can blindly insert or just proceed. For now, since it's an educational project,
+        // we can proceed with a simple flow, but to be robust, we insert the idempotency key *at the end* of the transaction.
+        // Or we can rely on standard transaction boundaries.
+
         // Lock both accounts to prevent race conditions during balance check/update
         const accountIds = [data.source_account_id, data.destination_account_id].sort();
         
@@ -106,27 +130,85 @@ export const transferRoutes: FastifyPluginAsync = async (fastify) => {
           .returningAll()
           .execute();
 
+        // 5. Insert outbox event for the transfer
+        await trx
+          .insertInto('outbox_events')
+          .values({
+            aggregate_type: 'TRANSFER',
+            aggregate_id: transferRecord.id,
+            event_type: 'transfer.completed',
+            payload: JSON.stringify(transferRecord),
+            status: 'PENDING',
+          })
+          .execute();
+
+        // 6. Store idempotency key
+        await trx
+          .insertInto('idempotency_keys')
+          .values({
+            key: idempotencyKey,
+            response_status: 201,
+            response_body: JSON.stringify(transferRecord),
+          })
+          .execute();
+
         return transferRecord;
       });
 
       return reply.status(201).send(transfer);
     } catch (error: any) {
+      const idempotencyKey = request.headers['idempotency-key'] as string | undefined;
+
+      let status = 500;
+      let body: any = { error: 'Internal Server Error' };
+
       if (error instanceof z.ZodError) {
-        return reply.status(400).send({ error: 'Bad Request', issues: error.issues });
-      }
-      
-      if (error.message === 'INSUFFICIENT_FUNDS') {
-        return reply.status(400).send({ error: 'Bad Request', message: 'Insufficient funds' });
-      }
-      if (error.message === 'SOURCE_NOT_FOUND' || error.message === 'DESTINATION_NOT_FOUND') {
-        return reply.status(400).send({ error: 'Bad Request', message: 'Account not found' });
-      }
-      if (error.message === 'CURRENCY_MISMATCH') {
-         return reply.status(400).send({ error: 'Bad Request', message: 'Currency mismatch' });
+        status = 400;
+        body = { error: 'Bad Request', issues: error.issues };
+      } else if (error.message === 'INSUFFICIENT_FUNDS') {
+        status = 400;
+        body = { error: 'Bad Request', message: 'Insufficient funds' };
+      } else if (error.message === 'SOURCE_NOT_FOUND' || error.message === 'DESTINATION_NOT_FOUND') {
+        status = 400;
+        body = { error: 'Bad Request', message: 'Account not found' };
+      } else if (error.message === 'CURRENCY_MISMATCH') {
+        status = 400;
+        body = { error: 'Bad Request', message: 'Currency mismatch' };
+      } else if (error.message === 'SAME_ACCOUNT_TRANSFER') {
+        status = 400;
+        body = { error: 'Bad Request', message: 'Cannot transfer to the same account' };
+      } else if (error.code === '23505' && error.constraint === 'idempotency_keys_pkey') {
+        // Concurrent request won the race. Fetch and return its response.
+        const existing = await db
+          .selectFrom('idempotency_keys')
+          .select(['response_status', 'response_body'])
+          .where('key', '=', idempotencyKey!)
+          .executeTakeFirst();
+          
+        if (existing) {
+          return reply.status(existing.response_status).send(existing.response_body);
+        }
+        // If it somehow disappeared, just fall through to 500
+      } else {
+        fastify.log.error(error);
       }
 
-      fastify.log.error(error);
-      return reply.status(500).send({ error: 'Internal Server Error' });
+      // If we failed with a client error, save it so retries get the same error
+      if (idempotencyKey && status >= 400 && status < 500) {
+        try {
+          await db.insertInto('idempotency_keys')
+            .values({
+              key: idempotencyKey,
+              response_status: status,
+              response_body: JSON.stringify(body),
+            })
+            .execute();
+        } catch (e) {
+          fastify.log.error(e, 'Failed to save idempotency key on error');
+        }
+      }
+
+      return reply.status(status).send(body);
     }
   });
 };
