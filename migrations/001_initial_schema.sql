@@ -1,0 +1,13 @@
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR UNIQUE NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE accounts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  currency VARCHAR(3) NOT NULL,
+  status VARCHAR NOT NULL DEFAULT 'ACTIVE',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
