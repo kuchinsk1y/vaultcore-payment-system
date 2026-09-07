@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { fastify } from '../../apps/api/server';
+import { signJwt } from '../../src/infrastructure/middleware/jwt-auth';
 import { db } from '../../src/infrastructure/database';
 import { closeRedisConnection } from '../../src/infrastructure/redis/redis.client';
 import crypto from 'node:crypto';
@@ -8,6 +9,7 @@ import { sql } from 'kysely';
 describe('Concurrency Storm Test', () => {
   let sourceAccountId: string;
   let destinationAccountId: string;
+  let userId: string;
 
   beforeAll(async () => {
     await fastify.ready();
@@ -18,6 +20,8 @@ describe('Concurrency Storm Test', () => {
       .values({ email: `storm-${crypto.randomUUID()}@example.com` })
       .returning('id')
       .execute();
+
+    userId = user.id;
 
     // Create source and destination accounts
     const [source] = await db
@@ -73,7 +77,7 @@ describe('Concurrency Storm Test', () => {
         remoteAddress: `192.168.2.${10 + index}`, 
         headers: {
           'idempotency-key': crypto.randomUUID(), // Unique idempotency key for each request
-          'authorization': 'Bearer test-api-key', // Ensure auth passes
+          'authorization': `Bearer ${signJwt(userId)}`, // Ensure auth passes
         },
         payload: {
           source_account_id: sourceAccountId,

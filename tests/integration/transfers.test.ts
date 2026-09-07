@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { fastify } from '../../apps/api/server';
+import { signJwt } from '../../src/infrastructure/middleware/jwt-auth';
 import { db } from '../../src/infrastructure/database';
 import { sql } from 'kysely';
 import { exec } from 'node:child_process';
@@ -96,7 +97,7 @@ describe('Transfers API with Idempotency', () => {
       url: '/transfers',
       headers: {
         'idempotency-key': idempotencyKey,
-        'authorization': 'Bearer test-api-key',
+        'authorization': `Bearer ${signJwt(userId)}`,
       },
       payload: {
         source_account_id: sourceAccountId,
@@ -146,7 +147,7 @@ describe('Transfers API with Idempotency', () => {
     const response1 = await fastify.inject({
       method: 'POST',
       url: '/transfers',
-      headers: { 'idempotency-key': idempotencyKey, 'authorization': 'Bearer test-api-key' },
+      headers: { 'idempotency-key': idempotencyKey, 'authorization': `Bearer ${signJwt(userId)}` },
       payload,
     });
 
@@ -160,7 +161,7 @@ describe('Transfers API with Idempotency', () => {
     const response2 = await fastify.inject({
       method: 'POST',
       url: '/transfers',
-      headers: { 'idempotency-key': idempotencyKey, 'authorization': 'Bearer test-api-key' },
+      headers: { 'idempotency-key': idempotencyKey, 'authorization': `Bearer ${signJwt(userId)}` },
       payload,
     });
 
@@ -179,7 +180,7 @@ describe('Transfers API with Idempotency', () => {
     const response = await fastify.inject({
       method: 'POST',
       url: '/transfers',
-      headers: { 'authorization': 'Bearer test-api-key' },
+      headers: { 'authorization': `Bearer ${signJwt(userId)}` },
       payload: {
         source_account_id: sourceAccountId,
         destination_account_id: destAccountId,
@@ -206,7 +207,7 @@ describe('Transfers API with Idempotency', () => {
     const response1 = await fastify.inject({
       method: 'POST',
       url: '/transfers',
-      headers: { 'idempotency-key': idempotencyKey, 'authorization': 'Bearer test-api-key' },
+      headers: { 'idempotency-key': idempotencyKey, 'authorization': `Bearer ${signJwt(userId)}` },
       payload,
     });
 
@@ -218,7 +219,7 @@ describe('Transfers API with Idempotency', () => {
     const response2 = await fastify.inject({
       method: 'POST',
       url: '/transfers',
-      headers: { 'idempotency-key': idempotencyKey, 'authorization': 'Bearer test-api-key' },
+      headers: { 'idempotency-key': idempotencyKey, 'authorization': `Bearer ${signJwt(userId)}` },
       payload,
     });
 
