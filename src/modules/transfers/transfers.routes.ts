@@ -1,7 +1,9 @@
-import { FastifyPluginAsync } from 'fastify';
+import { FastifyPluginAsync, FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { db } from '../../infrastructure/database';
 import { sql } from 'kysely';
+import { createRateLimiter } from '../../infrastructure/middleware/rate-limiter';
+import { requireApiKey } from '../../infrastructure/middleware/auth';
 
 const CreateTransferSchema = z.object({
   source_account_id: z.string().uuid(),
@@ -11,7 +13,10 @@ const CreateTransferSchema = z.object({
 });
 
 export const transferRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.post('/', async (request, reply) => {
+  // Apply a strict rate limit: max 10 requests per 60 seconds per IP for transfers
+  const transferRateLimiter = createRateLimiter(10, 60);
+
+  fastify.post('/', { preHandler: [requireApiKey, transferRateLimiter] }, async (request, reply) => {
     try {
       const idempotencyKey = request.headers['idempotency-key'] as string | undefined;
 

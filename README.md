@@ -1,4 +1,5 @@
 # VaultCore 🚀
+[![CI](https://github.com/kuchinsk1y/paycore-payment-system/actions/workflows/ci.yml/badge.svg)](https://github.com/kuchinsk1y/paycore-payment-system/actions/workflows/ci.yml)
 > Production-style financial payment and double-entry ledger simulation engine built for deep backend & system design mastery.
 
 ## 📌 About the Project
@@ -85,6 +86,12 @@ Run real database integration tests:
 npm run test:integration
 ```
 
+### 7. Run Load Tests (k6)
+Ensure your API and database are running, then install `k6` and execute the concurrency load test:
+```bash
+k6 run load-tests/transfers-load.js
+```
+
 ---
 
 ## 📈 Roadmap & Future Stages
@@ -97,3 +104,5 @@ npm run test:integration
 - [x] Payment Gateway Simulator & Webhook Ingestion (Handling duplicates & idempotency)
 - [x] Failure Recovery & Reconciliation (Stale event detection and self-healing)
 - [x] Observability & Structured Tracing (Request-ID correlation & system metrics)
+- [x] Security (API Key Auth & Redis Rate Limiting)
+- [x] Load Testing & Concurrency Storms

@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: vaultcore
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: vaultcore_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Type check
+      run: npm run typecheck
+      # Ensure there are no type errors in the repository
+
+    - name: Run Database Migrations
+      run: npm run db:migrate
+      env:
+        DATABASE_URL: postgres://vaultcore:password@localhost:5432/vaultcore_db?sslmode=disable
+
+    - name: Run Integration Tests
+      run: npm run test:integration -- --fileParallelism false
+      env:
+        DATABASE_URL: postgres://vaultcore:password@localhost:5432/vaultcore_db?sslmode=disable
+        REDIS_URL: redis://localhost:6379
+        API_KEY: test-api-key

@@ -96,6 +96,7 @@ describe('Transfers API with Idempotency', () => {
       url: '/transfers',
       headers: {
         'idempotency-key': idempotencyKey,
+        'authorization': 'Bearer test-api-key',
       },
       payload: {
         source_account_id: sourceAccountId,
@@ -145,7 +146,7 @@ describe('Transfers API with Idempotency', () => {
     const response1 = await fastify.inject({
       method: 'POST',
       url: '/transfers',
-      headers: { 'idempotency-key': idempotencyKey },
+      headers: { 'idempotency-key': idempotencyKey, 'authorization': 'Bearer test-api-key' },
       payload,
     });
 
@@ -159,7 +160,7 @@ describe('Transfers API with Idempotency', () => {
     const response2 = await fastify.inject({
       method: 'POST',
       url: '/transfers',
-      headers: { 'idempotency-key': idempotencyKey },
+      headers: { 'idempotency-key': idempotencyKey, 'authorization': 'Bearer test-api-key' },
       payload,
     });
 
@@ -178,6 +179,7 @@ describe('Transfers API with Idempotency', () => {
     const response = await fastify.inject({
       method: 'POST',
       url: '/transfers',
+      headers: { 'authorization': 'Bearer test-api-key' },
       payload: {
         source_account_id: sourceAccountId,
         destination_account_id: destAccountId,
@@ -204,7 +206,7 @@ describe('Transfers API with Idempotency', () => {
     const response1 = await fastify.inject({
       method: 'POST',
       url: '/transfers',
-      headers: { 'idempotency-key': idempotencyKey },
+      headers: { 'idempotency-key': idempotencyKey, 'authorization': 'Bearer test-api-key' },
       payload,
     });
 
@@ -216,7 +218,7 @@ describe('Transfers API with Idempotency', () => {
     const response2 = await fastify.inject({
       method: 'POST',
       url: '/transfers',
-      headers: { 'idempotency-key': idempotencyKey },
+      headers: { 'idempotency-key': idempotencyKey, 'authorization': 'Bearer test-api-key' },
       payload,
     });
 
