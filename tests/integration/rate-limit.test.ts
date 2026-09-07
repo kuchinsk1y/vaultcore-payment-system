@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { fastify } from '../../apps/api/server';
+import { signJwt } from '../../src/infrastructure/middleware/jwt-auth';
 import { db } from '../../src/infrastructure/database';
 import { redis, closeRedisConnection } from '../../src/infrastructure/redis/redis.client';
 import crypto from 'node:crypto';
@@ -7,6 +8,7 @@ import crypto from 'node:crypto';
 describe('Rate Limiter Middleware', () => {
   let sourceAccountId: string;
   let destinationAccountId: string;
+  let userId: string;
 
   beforeAll(async () => {
     await fastify.ready();
@@ -17,6 +19,8 @@ describe('Rate Limiter Middleware', () => {
       .values({ email: `rate-limit-${crypto.randomUUID()}@example.com` })
       .returning('id')
       .execute();
+
+    userId = user.id;
 
     const [source] = await db
       .insertInto('accounts')
@@ -54,7 +58,7 @@ describe('Rate Limiter Middleware', () => {
         remoteAddress: '192.168.1.100', 
         headers: {
           'idempotency-key': crypto.randomUUID(), // Prevent idempotency from caching
-          'authorization': 'Bearer test-api-key',
+          'authorization': `Bearer ${signJwt(userId)}`,
         },
         payload: {
           source_account_id: sourceAccountId,
@@ -81,7 +85,7 @@ describe('Rate Limiter Middleware', () => {
       remoteAddress: '192.168.1.100',
       headers: {
         'idempotency-key': crypto.randomUUID(),
-        'authorization': 'Bearer test-api-key',
+        'authorization': `Bearer ${signJwt(userId)}`,
       },
       payload: {
         source_account_id: sourceAccountId,

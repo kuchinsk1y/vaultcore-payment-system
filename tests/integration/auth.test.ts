@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { fastify } from '../../apps/api/server';
+import { signJwt } from '../../src/infrastructure/middleware/jwt-auth';
 import { db } from '../../src/infrastructure/database';
 import { closeRedisConnection } from '../../src/infrastructure/redis/redis.client';
 import crypto from 'node:crypto';
@@ -7,6 +8,7 @@ import crypto from 'node:crypto';
 describe('API Key Authentication Middleware', () => {
   let sourceAccountId: string;
   let destinationAccountId: string;
+  let userId: string;
 
   beforeAll(async () => {
     await fastify.ready();
@@ -17,6 +19,8 @@ describe('API Key Authentication Middleware', () => {
       .values({ email: `auth-${crypto.randomUUID()}@example.com` })
       .returning('id')
       .execute();
+
+    userId = user.id;
 
     const [source] = await db
       .insertInto('accounts')
@@ -57,9 +61,8 @@ describe('API Key Authentication Middleware', () => {
 
     expect(response.statusCode).toBe(401);
     const body = JSON.parse(response.payload);
-    expect(body.status).toBe('error');
-    expect(body.code).toBe('UNAUTHORIZED');
-    expect(body.message).toBe('Missing or malformed API key');
+    expect(body.error).toBe('UNAUTHORIZED');
+    expect(body.message).toBe('Missing or invalid Authorization header');
   });
 
   it('should block requests with an invalid API key', async () => {
@@ -80,9 +83,8 @@ describe('API Key Authentication Middleware', () => {
 
     expect(response.statusCode).toBe(401);
     const body = JSON.parse(response.payload);
-    expect(body.status).toBe('error');
-    expect(body.code).toBe('UNAUTHORIZED');
-    expect(body.message).toBe('Invalid API key');
+    expect(body.error).toBe('UNAUTHORIZED');
+    expect(body.message).toBe('Invalid or expired token');
   });
 
   it('should allow requests with a valid API key', async () => {
@@ -91,7 +93,7 @@ describe('API Key Authentication Middleware', () => {
       url: '/transfers',
       headers: {
         'idempotency-key': crypto.randomUUID(),
-        'authorization': 'Bearer test-api-key',
+        'authorization': `Bearer ${signJwt(userId)}`,
       },
       payload: {
         source_account_id: sourceAccountId,

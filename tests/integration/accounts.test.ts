@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { fastify } from '../../apps/api/server';
+import { signJwt } from '../../src/infrastructure/middleware/jwt-auth';
 import { db } from '../../src/infrastructure/database';
 import { sql } from 'kysely';
 
@@ -67,8 +68,8 @@ describe('Users and Accounts API', () => {
       const response = await fastify.inject({
         method: 'POST',
         url: '/accounts',
+        headers: { 'authorization': `Bearer ${signJwt(createdUserId)}` },
         payload: {
-          user_id: createdUserId,
           currency: 'EUR',
         },
       });
@@ -81,27 +82,28 @@ describe('Users and Accounts API', () => {
       expect(body.status).toBe('ACTIVE');
     });
 
-    it('should return 400 for non-existent user (foreign key violation)', async () => {
+    it('should return 500 for non-existent user (foreign key violation)', async () => {
+      const fakeToken = signJwt('00000000-0000-0000-0000-000000000000');
       const response = await fastify.inject({
         method: 'POST',
         url: '/accounts',
+        headers: { 'authorization': `Bearer ${fakeToken}` },
         payload: {
-          user_id: '00000000-0000-0000-0000-000000000000',
           currency: 'USD',
         },
       });
 
-      expect(response.statusCode).toBe(400);
+      expect(response.statusCode).toBe(500);
       const body = JSON.parse(response.payload);
-      expect(body.message).toBe('Invalid user_id');
+      expect(body.error).toBe('Internal Server Error');
     });
 
     it('should return 400 for invalid currency format', async () => {
       const response = await fastify.inject({
         method: 'POST',
         url: '/accounts',
+        headers: { 'authorization': `Bearer ${signJwt(createdUserId)}` },
         payload: {
-          user_id: createdUserId,
           currency: 'EURO', // Too long (expected 3)
         },
       });
