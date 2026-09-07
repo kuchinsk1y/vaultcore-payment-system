@@ -9,7 +9,7 @@
     "build": "tsc",
     "test": "vitest run tests/application",
     "test:integration": "vitest run tests/integration",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && npx tsc --noEmit -p apps/web/tsconfig.json"
   },
   "keywords": [],
   "author": "",
