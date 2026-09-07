@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
+}
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%; /* #0A0A0B */
+    --foreground: 0 0% 98%;
+  }
+
+  body {
+    @apply bg-[#0A0A0B] text-[#F3F4F6] font-sans antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  h1, h2, h3, h4, h5, h6, .font-serif {
+    font-family: var(--font-playfair);
+  }
+}
+
+@layer utilities {
+  .surface-premium {
+    @apply bg-[#121214] border border-white/[0.04] transition-all duration-500 ease-out;
+    box-shadow: 0 4px 20px -2px rgba(0,0,0,0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.02);
+  }
+
+  .input-premium {
+    @apply bg-[#0A0A0B] border border-white/[0.06] text-[#E5E7EB] placeholder-[#6B7280] focus:border-[#C5A059]/50 focus:ring-1 focus:ring-[#C5A059]/20 rounded-lg transition-all duration-500 ease-out shadow-inner;
+  }
+
+  .btn-luxury {
+    @apply bg-[#1C1C1E] text-white border border-[#C5A059]/30 hover:bg-[#252528] hover:border-[#C5A059]/60 shadow-lg shadow-black/40 font-medium rounded-lg transition-all duration-500 ease-out;
+  }
+  
+  .btn-gold {
+    @apply bg-gradient-to-br from-[#D4AF37] to-[#B38F2B] hover:from-[#E5C048] hover:to-[#C4A03C] text-black font-semibold shadow-lg shadow-[#D4AF37]/20 rounded-lg transition-all duration-500 ease-out;
+  }
+}

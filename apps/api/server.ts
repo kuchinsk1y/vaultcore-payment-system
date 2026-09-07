@@ -65,12 +65,20 @@ fastify.get('/metrics', async (request, reply) => {
 });
 
 import { webhookRoutes } from '../../src/modules/webhooks/webhooks.routes';
+import { authRoutes } from '../../src/modules/auth/auth.routes';
+import { fxRoutes } from '../../src/modules/fx/fx.routes';
+import { analyticsRoutes } from '../../src/modules/analytics/analytics.routes';
+import { cardsRoutes } from '../../src/modules/cards/cards.routes';
 
 // Register routes
+fastify.register(authRoutes, { prefix: '/auth' });
 fastify.register(userRoutes, { prefix: '/users' });
 fastify.register(accountRoutes, { prefix: '/accounts' });
 fastify.register(transferRoutes, { prefix: '/transfers' });
 fastify.register(webhookRoutes, { prefix: '/webhooks' });
+fastify.register(fxRoutes, { prefix: '/fx' });
+fastify.register(analyticsRoutes, { prefix: '/analytics' });
+fastify.register(cardsRoutes, { prefix: '/cards' });
 
 import { OutboxWorker } from '../../src/infrastructure/workers/outbox.worker';
 import { WebhookProcessor } from '../../src/modules/webhooks/webhooks.processor';
@@ -80,10 +88,6 @@ const start = async () => {
   let webhookProcessor: WebhookProcessor;
   
   try {
-    const port = parseInt(process.env.PORT || '3000', 10);
-    await fastify.listen({ port, host: '0.0.0.0' });
-    fastify.log.info(`Server listening on port ${port}`);
-
     // Start background workers
     outboxWorker = new OutboxWorker(fastify.log);
     outboxWorker.start();
@@ -93,9 +97,13 @@ const start = async () => {
     
     // Graceful shutdown hook
     fastify.addHook('onClose', async () => {
-      outboxWorker.stop();
-      webhookProcessor.stop();
+      if (outboxWorker) outboxWorker.stop();
+      if (webhookProcessor) webhookProcessor.stop();
     });
+
+    const port = parseInt(process.env.PORT || '3000', 10);
+    await fastify.listen({ port, host: '0.0.0.0' });
+    fastify.log.info(`Server listening on port ${port}`);
     
   } catch (err) {
     fastify.log.error(err);

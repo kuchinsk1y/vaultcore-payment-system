@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { db } from '../../infrastructure/database';
 import { sql } from 'kysely';
 import { createRateLimiter } from '../../infrastructure/middleware/rate-limiter';
-import { requireApiKey } from '../../infrastructure/middleware/auth';
+import { verifyJwt } from '../../infrastructure/middleware/jwt-auth';
+import { FraudService } from '../fraud/fraud.service';
 
 const CreateTransferSchema = z.object({
   source_account_id: z.string().uuid(),
@@ -16,7 +17,7 @@ export const transferRoutes: FastifyPluginAsync = async (fastify) => {
   // Apply a strict rate limit: max 10 requests per 60 seconds per IP for transfers
   const transferRateLimiter = createRateLimiter(10, 60);
 
-  fastify.post('/', { preHandler: [requireApiKey, transferRateLimiter] }, async (request, reply) => {
+  fastify.post('/', { preHandler: [verifyJwt, transferRateLimiter] }, async (request, reply) => {
     try {
       const idempotencyKey = request.headers['idempotency-key'] as string | undefined;
 
@@ -41,6 +42,20 @@ export const transferRoutes: FastifyPluginAsync = async (fastify) => {
         throw new Error('SAME_ACCOUNT_TRANSFER');
       }
 
+      // Run Fraud Check BEFORE creating the transaction
+      const riskEvaluation = await FraudService.evaluateTransferRisk(
+        request.userId as string,
+        data.source_account_id,
+        data.amount
+      );
+
+      // Log risk immediately
+      await FraudService.logRisk(request.userId as string, riskEvaluation);
+
+      if (riskEvaluation.status === 'BLOCKED') {
+        throw new Error('HIGH_RISK_BLOCKED');
+      }
+
       // Start transaction
       const transfer = await db.transaction().execute(async (trx) => {
         // Double-check idempotency key inside the transaction with a lock to prevent concurrent requests 
@@ -62,11 +77,12 @@ export const transferRoutes: FastifyPluginAsync = async (fastify) => {
         // 1. Check source account validity and balance via ledger
         const sourceAccount = await trx
           .selectFrom('accounts')
-          .select('currency')
+          .select(['currency', 'user_id'])
           .where('id', '=', data.source_account_id)
           .executeTakeFirst();
 
         if (!sourceAccount) throw new Error('SOURCE_NOT_FOUND');
+        if (sourceAccount.user_id !== request.userId) throw new Error('UNAUTHORIZED_ACCOUNT');
         if (sourceAccount.currency !== data.currency) throw new Error('CURRENCY_MISMATCH');
 
         const sourceLedger = await trx
@@ -170,6 +186,9 @@ export const transferRoutes: FastifyPluginAsync = async (fastify) => {
       if (error instanceof z.ZodError) {
         status = 400;
         body = { error: 'Bad Request', issues: error.issues };
+      } else if (error.message === 'HIGH_RISK_BLOCKED') {
+        status = 403;
+        body = { error: 'Forbidden', message: 'Transaction blocked by risk evaluation engine' };
       } else if (error.message === 'INSUFFICIENT_FUNDS') {
         status = 400;
         body = { error: 'Bad Request', message: 'Insufficient funds' };
@@ -182,6 +201,9 @@ export const transferRoutes: FastifyPluginAsync = async (fastify) => {
       } else if (error.message === 'SAME_ACCOUNT_TRANSFER') {
         status = 400;
         body = { error: 'Bad Request', message: 'Cannot transfer to the same account' };
+      } else if (error.message === 'UNAUTHORIZED_ACCOUNT') {
+        status = 403;
+        body = { error: 'Forbidden', message: 'Not authorized to transfer from this account' };
       } else if (error.code === '23505' && error.constraint === 'idempotency_keys_pkey') {
         // Concurrent request won the race. Fetch and return its response.
         const existing = await db

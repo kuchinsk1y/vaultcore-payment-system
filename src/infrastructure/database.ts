@@ -9,6 +9,8 @@ import { Generated } from 'kysely';
 export interface UsersTable {
   id: Generated<string>;
   email: string;
+  password_hash: string | null;
+  full_name: string | null;
   created_at: Generated<Date>;
 }
 
@@ -74,6 +76,35 @@ export interface WebhookEventsTable {
   processed_at: Date | null;
 }
 
+export interface ExchangeRatesTable {
+  id: Generated<string>;
+  base_currency: string;
+  target_currency: string;
+  rate: string | number; // NUMERIC
+  created_at: Generated<Date>;
+}
+
+export interface CardsTable {
+  id: Generated<string>;
+  user_id: string;
+  account_id: string;
+  card_type: 'VIRTUAL' | 'PHYSICAL';
+  last_four: string;
+  status: Generated<'ACTIVE' | 'FROZEN' | 'BLOCKED'>;
+  spending_limit: Generated<number>;
+  created_at: Generated<Date>;
+}
+
+export interface RiskLogsTable {
+  id: Generated<string>;
+  transaction_id: string | null;
+  user_id: string;
+  risk_score: number;
+  status: 'APPROVED' | 'FLAGGED' | 'BLOCKED';
+  reason: string;
+  created_at: Generated<Date>;
+}
+
 export interface Database {
   users: UsersTable;
   accounts: AccountsTable;
@@ -83,6 +114,9 @@ export interface Database {
   idempotency_keys: IdempotencyKeysTable;
   outbox_events: OutboxEventsTable;
   webhook_events: WebhookEventsTable;
+  exchange_rates: ExchangeRatesTable;
+  cards: CardsTable;
+  risk_logs: RiskLogsTable;
 }
 
 const dialect = new PostgresDialect({
