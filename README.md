@@ -7,7 +7,7 @@
 ---
 
 ## 🏛️ Architectural Principles
-- **Modular Monolith:** Clean bounded contexts (`users`, `accounts`, `transfers`, `ledger`, `webhooks`) without premature microservice overhead.
+- **Modular Monolith:** Clean bounded contexts (`users`, `accounts`, `transfers`, `ledger`, `webhooks`, `reconciliation`) without premature microservice overhead.
 - **Strict Separation of Concerns:** Database infrastructure is strictly decoupled from Fastify HTTP handlers and domain logic.
 - **No Magic ORMs:** Uses **Kysely** (type-safe SQL query builder) to ensure full transparency and control over raw SQL queries, row locks, and execution plans.
 - **Double-Entry Bookkeeping (Ledger):** The database state relies on an immutable `append-only` ledger (`debits` and `credits`), where account balances are dynamically derived rather than blindly overwritten.
@@ -21,7 +21,7 @@
 - **Query Builder:** Kysely
 - **Validation:** Zod
 - **Testing:** Vitest (Unit & Real Integration Tests)
-- **Logging:** Pino (Structured JSON logs)
+- **Logging & Observability:** Pino (Structured JSON logs with automated `X-Request-Id` correlation propagation)
 
 ---
 
@@ -32,9 +32,11 @@
 4. **Deadlock Prevention:** Uses consistent sorting of account IDs prior to lock acquisition.
 5. **Idempotency Keys:** Guarantees protection against double charges and duplicate operations on client network retries.
 6. **Transactional Outbox Pattern:** Ensures reliable asynchronous messaging by storing events inside the same database transaction as business data.
-7. **Background Polling Workers (`SKIP LOCKED`):** Safely processes outbox events across multiple concurrent worker instances without race conditions or duplicate deliveries.
-8. **Webhook Inbox & Deduplication:** Safely ingests asynchronous events from external payment gateways, using database unique constraints to gracefully handle duplicate webhook deliveries.
-9. **Database-First Constraints:** Enforces business invariants (`UNIQUE`, `FOREIGN KEY` with `ON DELETE RESTRICT`) directly inside PostgreSQL as the ultimate source of truth.
+7. **Background Polling Workers (`SKIP LOCKED`):** Safely processes outbox events and webhook queues across multiple concurrent worker instances without race conditions or duplicate deliveries.
+8. **Webhook Inbox & Deduplication:** Safely ingests asynchronous events from external payment gateways, using database unique constraints and idempotent processors to update balances reliably.
+9. **Internal Reconciliation Service:** Automatically detects stale or stuck asynchronous events, flagging anomalies to guarantee system self-healing and consistency.
+10. **Observability & Request Tracing:** Enforces end-to-end `X-Request-Id` correlation tracking across all HTTP requests, structured logs, and database operations alongside live health/metrics endpoints.
+11. **Database-First Constraints:** Enforces business invariants (`UNIQUE`, `FOREIGN KEY` with `ON DELETE RESTRICT`) directly inside PostgreSQL as the ultimate source of truth.
 
 ---
 
@@ -93,5 +95,5 @@ npm run test:integration
 - [x] Idempotency Keys (Preventing double charges on client retries)
 - [x] Asynchronous Processing (Outbox pattern + Queues & Workers with SKIP LOCKED)
 - [x] Payment Gateway Simulator & Webhook Ingestion (Handling duplicates & idempotency)
-- [ ] Failure Recovery & Reconciliation
-- [ ] Observability (OpenTelemetry & Structured Tracing)
+- [x] Failure Recovery & Reconciliation (Stale event detection and self-healing)
+- [x] Observability & Structured Tracing (Request-ID correlation & system metrics)
