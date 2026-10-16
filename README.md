@@ -1,158 +1,312 @@
-# VaultCore 🚀
-[![CI](https://github.com/kuchinsk1y/paycore-payment-system/actions/workflows/ci.yml/badge.svg)](https://github.com/kuchinsk1y/paycore-payment-system/actions/workflows/ci.yml)
-> Production-style financial payment and double-entry ledger simulation engine built for deep backend & system design mastery.
+# VaultCore
 
-## 📌 About the Project
-**VaultCore** is an educational, production-grade backend system designed to simulate real-world financial, banking, and payment infrastructure. Unlike typical CRUD applications, VaultCore focuses heavily on data integrity, concurrency control, ACID transactions, and architectural patterns critical for FinTech systems.
+[![CI](https://github.com/kuchinsk1y/vaultcore-payment-system/actions/workflows/ci.yml/badge.svg)](https://github.com/kuchinsk1y/vaultcore-payment-system/actions/workflows/ci.yml)
+![Node](https://img.shields.io/badge/node-%E2%89%A5%2020-339933?logo=node.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 
----
+**A multi-currency digital bank in a sandbox: double-entry ledger, safe money movement, and a security model modelled on real banking apps.**
 
-## 🏛️ Architectural Principles
-- **Modular Monolith:** Clean bounded contexts (`users`, `accounts`, `transfers`, `ledger`, `webhooks`, `reconciliation`) without premature microservice overhead.
-- **Strict Separation of Concerns:** Database infrastructure is strictly decoupled from Fastify HTTP handlers and domain logic.
-- **No Magic ORMs:** Uses **Kysely** (type-safe SQL query builder) to ensure full transparency and control over raw SQL queries, row locks, and execution plans.
-- **Double-Entry Bookkeeping (Ledger):** The database state relies on an immutable `append-only` ledger (`debits` and `credits`), where account balances are dynamically derived rather than blindly overwritten.
+VaultCore is a full-stack pet project: a Fastify + PostgreSQL backend and a Next.js dashboard. It is built to show how the hard parts of a payment system work: correctness under concurrency, idempotent operations, an immutable ledger, and account security (rotating sessions, two-factor authentication, step-up confirmation of large transfers, audit trail).
+
+> **Sandbox only.** No real money or payment network is involved. Top-ups are simulated, exchange rates are fixed values stored in the database, and emails are printed to the server log.
 
 ---
 
-## ⚙️ Tech Stack
-- **Runtime:** Node.js & TypeScript
-- **API Framework:** Fastify
-- **Database:** PostgreSQL (with Docker Compose)
-- **Query Builder:** Kysely
-- **Validation:** Zod
-- **Testing:** Vitest (Unit & Real Integration Tests)
-- **Logging & Observability:** Pino (Structured JSON logs with automated `X-Request-Id` correlation propagation)
+## Contents
+
+- [What you can do](#what-you-can-do)
+- [Engineering highlights](#engineering-highlights)
+- [Tech stack](#tech-stack)
+- [Architecture](#architecture)
+- [Getting started](#getting-started)
+- [Configuration](#configuration)
+- [Scripts](#scripts)
+- [Testing](#testing)
+- [API overview](#api-overview)
+- [Security model](#security-model)
+- [Limitations and ideas](#limitations-and-ideas)
 
 ---
 
-## 🛠️ Core Engineering Features Implemented
-1. **ACID Transactions:** All monetary movements execute within strict PostgreSQL transaction blocks (`BEGIN`, `COMMIT`, `ROLLBACK`) to eliminate partial failures.
-2. **Double-Entry Ledger Architecture:** Implements the accounting invariant (Sum of Debits = Sum of Credits), preventing silent balance corruptions and providing a complete audit trail.
-3. **Concurrency Control & Race Condition Prevention:** Employs row-level locking (`SELECT ... FOR UPDATE`) to prevent lost updates during simultaneous transfers.
-4. **Deadlock Prevention:** Uses consistent sorting of account IDs prior to lock acquisition.
-5. **Idempotency Keys:** Guarantees protection against double charges and duplicate operations on client network retries.
-6. **Transactional Outbox Pattern:** Ensures reliable asynchronous messaging by storing events inside the same database transaction as business data.
-7. **Background Polling Workers (`SKIP LOCKED`):** Safely processes outbox events and webhook queues across multiple concurrent worker instances without race conditions or duplicate deliveries.
-8. **Webhook Inbox & Deduplication:** Safely ingests asynchronous events from external payment gateways, using database unique constraints and idempotent processors to update balances reliably.
-9. **Internal Reconciliation Service:** Automatically detects stale or stuck asynchronous events, flagging anomalies to guarantee system self-healing and consistency.
-10. **Observability & Request Tracing:** Enforces end-to-end `X-Request-Id` correlation tracking across all HTTP requests, structured logs, and database operations alongside live health/metrics endpoints.
-11. **Database-First Constraints:** Enforces business invariants (`UNIQUE`, `FOREIGN KEY` with `ON DELETE RESTRICT`) directly inside PostgreSQL as the ultimate source of truth.
+## What you can do
+
+| Area | Capabilities |
+|---|---|
+| **Accounts** | Open one account per currency (EUR, USD, PLN) and see balances derived from the ledger. |
+| **Dashboard** | Total balance with a real 30-day change, income and expenses for the month, balance history chart, spending by category, recent activity, and a getting-started checklist for new users. Every block loads and fails independently with a retry. |
+| **Transfers** | Send money to a saved contact or any account by id. Idempotent, atomic, with a fraud check. Large transfers require a one-time code. |
+| **Transactions** | Full history across accounts with search, filters (account, type, direction, dates), exact keyset pagination and CSV export. |
+| **Exchange** | Convert between your own accounts at the platform rate, with a preview that matches exactly what is credited. |
+| **Top-up** | Add demo funds to an account (rate limited, with per-request and rolling 24-hour caps). |
+| **Cards** | Issue virtual cards, freeze / unfreeze, set a PIN. |
+| **Contacts** | Find people by phone number and save them for quick transfers. |
+| **Security** | Sessions list, log out everywhere, password change / reset, email verification, TOTP two-factor authentication, personal activity log. |
+| **Preferences** | English, Russian, German and Polish; light and dark themes; balance privacy toggle. |
 
 ---
 
-## 🗂️ Repository Layout
-This is an npm-workspaces monorepo:
+## Engineering highlights
+
+| Problem | Solution |
+|---|---|
+| Balances must never drift | **Double-entry ledger.** Every movement is a balanced set of `DEBIT`/`CREDIT` entries; balances are *derived* from entries, never stored or overwritten. Transactions are classified (`TRANSFER`, `EXCHANGE`, `TOP_UP`, `DEPOSIT`). |
+| Two requests spending the same money | **ACID transactions with row locks.** Accounts are locked with `SELECT … FOR UPDATE` in a stable order, which also prevents deadlocks. A 30-request concurrency storm is part of the test suite. |
+| Client retries cause double charges | **Idempotency keys** stored with the response; concurrent duplicates resolve through a unique constraint. |
+| Events lost between DB and the outside world | **Transactional outbox** written in the same transaction as the business change, drained by workers using `FOR UPDATE SKIP LOCKED`. |
+| Duplicate / replayed gateway callbacks | **Webhook inbox** with deduplication and an idempotent processor. |
+| Stolen refresh token | **Rotating refresh tokens with reuse detection**: replaying an old token revokes the whole session. Tokens are stored only as hashes. |
+| Brute force | Per-account lockout, per-IP rate limiting (Redis), constant-time responses for unknown emails. |
+| Phished session approving a big transfer | **Step-up confirmation**: a one-time code (email or authenticator app) bound to the exact transfer; single use, expiring, attempt-limited. |
+| Who did what | **Append-only audit log**, enforced by a database trigger rather than application code. |
+| Spreadsheet formula injection in exports | CSV cells starting with `=`, `+`, `-`, `@` are neutralised; plain numbers stay numeric. |
+| Tests wiping real data | Integration tests only run against a database whose name ends with `_test`; anything else aborts. |
+
+Also: structured logging with request-id correlation (Pino), a fraud engine (velocity, amount and frozen-card rules), and a reconciliation service that detects stuck events.
+
+---
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Node.js 20+, TypeScript (strict), **Fastify 5**, **Kysely** (type-safe SQL, no ORM), Zod, Pino |
+| Data | **PostgreSQL 15** (plain SQL migrations), **Redis 7** (rate limiting) |
+| Frontend | **Next.js 16** (App Router), React 19, Tailwind CSS 4, next-intl, Zustand, Recharts |
+| Auth | JWT access tokens + opaque refresh tokens in httpOnly cookies, bcrypt, TOTP (RFC 6238, implemented on `node:crypto`), AES-256-GCM for secrets at rest |
+| Quality | Vitest (API and web), Testing Library, ESLint (typescript-eslint), Prettier, GitHub Actions, k6 load test |
+| Tooling | npm workspaces, Docker Compose for local infrastructure |
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Browser["Browser"] -->|"/ (pages)"| Web["Next.js app<br/>apps/web :3000"]
+    Browser -->|"/api/* (same origin, cookies)"| Web
+    Web -->|"rewrite /api/*"| API["Fastify API<br/>apps/api :3001"]
+    API --> PG[("PostgreSQL<br/>ledger, accounts, sessions, audit")]
+    API --> Redis[("Redis<br/>rate limits")]
+    Workers["Background workers<br/>outbox dispatcher, webhook processor"] --> PG
+    API --- Workers
+```
+
+The browser only ever talks to the Next.js origin; `/api/*` is proxied to the API. That keeps session cookies first-party (`SameSite=Strict`) and removes the need for CORS in the browser.
+
+### Repository layout
 
 ```
 apps/
-  api/                 Fastify + Kysely backend (@paycore/api)
+  api/                    Backend (@paycore/api)
+    migrations/           Plain SQL migrations, applied in order
+    scripts/              migrate.ts and local helper scripts (scripts/dev)
     src/
-      app.ts           Fastify instance: plugins (cookie, helmet, CORS) and route registration
-      server.ts        Entry point: starts background workers and listens
-      config/          Environment loading (reads the root .env)
-      infrastructure/  Database, Redis, middleware
-      modules/         Bounded contexts: routes -> service -> database
-    migrations/        Plain SQL migrations (applied by scripts/migrate.ts)
-    scripts/           migrate.ts and one-off dev scripts (scripts/dev)
-    tests/             unit/ (no I/O) and integration/ (real Postgres + Redis)
-  web/                 Next.js dashboard (App Router, next-intl, Zustand)
-load-tests/            k6 scenarios
+      app.ts              Builds the Fastify instance: plugins and routes
+      server.ts           Entry point: starts workers and listens
+      config/             Environment loading (reads the repository-root .env)
+      infrastructure/     Database, Redis, middleware (JWT, API key, rate limiter)
+      modules/            One folder per bounded context (see below)
+    tests/
+      unit/               Pure logic, no I/O
+      integration/        Real PostgreSQL + Redis
+  web/                    Next.js dashboard
+    messages/             Translations (en, ru, de, pl)
+    src/
+      app/                Routes (App Router)
+      components/         UI grouped by feature (dashboard, transactions, security, ...)
+      hooks/              Data loading and form logic
+      lib/                API client, formatting, pure helpers
+load-tests/               k6 scenario for the transfer endpoint
+docker-compose.yml        PostgreSQL and Redis for local development
 ```
 
-Modules keep HTTP concerns in `*.routes.ts`, business logic in `*.service.ts`, and pure rules/calculations
-in separate files (e.g. `transfer.rules.ts`, `analytics.calculations.ts`) so they can be unit-tested without a database.
+### Backend modules
 
----
+Each module keeps HTTP concerns, business logic and pure rules apart, so the rules can be unit-tested without a database:
 
-## 🧭 What you can do in the app
-- **Dashboard:** accounts with balances, total balance with a real 30-day change, income/expenses for the month, balance history, spending by category, recent activity, and a getting-started checklist for new users. Every section loads (and fails) independently, with a retry.
-- **Transactions:** full history across accounts with search, filters (account, type, direction, dates), exact keyset pagination and CSV export (formula-injection safe).
-- **Top up / open account:** demo top-ups (a balanced double-entry movement from the platform's clearing account, with per-request and rolling 24h limits; disabled in production by default) and opening an account in any supported currency.
-- **Exchange:** convert between your own accounts at the platform rate, with a live preview that matches what the API credits.
-- **Transfers, cards, settings (security, language, theme):** see below.
-
-The UI is available in English, Russian, German and Polish; a test keeps every locale in sync.
-
----
-
-## 🔐 Account Security
-- **Sessions:** a 15-minute access token and a rotating refresh token, both in httpOnly, SameSite=Strict cookies. Refresh tokens are stored only as hashes; replaying an already-rotated token revokes the whole session.
-- **Active sessions:** list devices, sign one out, or sign out everywhere (also done automatically on password reset/change).
-- **Brute-force protection:** accounts lock for 15 minutes after 5 failed sign-ins (wrong password or wrong 2FA code), plus per-IP rate limits.
-- **Two-factor authentication:** TOTP (RFC 6238) for any authenticator app. Secrets are encrypted at rest (AES-256-GCM, `ENCRYPTION_KEY`); codes cannot be replayed.
-- **Email verification and password reset:** single-use, expiring links. Transfers require a verified email.
-- **Large transfers:** at or above `LARGE_TRANSFER_THRESHOLD` the API answers `202 CONFIRMATION_REQUIRED`; the client repeats the request with `confirmation_id` + `confirmation_code` (emailed OTP, or the authenticator code if 2FA is on). The code is bound to the exact transfer and is single-use.
-- **Audit log:** an append-only trail (enforced by a database trigger) of sign-ins, security changes, transfers, cards, etc. — `GET /auth/audit-log`.
-
-In development emails are not sent: verification links and one-time codes are printed in the API log. Plug a real provider in with `setMailer()` (`modules/security/mailer.ts`).
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js (v20+)
-- Docker & Docker Compose
-
-### 1. Environment Setup
-```bash
-cp .env.example .env
 ```
-Set `JWT_SECRET` and `API_KEY` (the API key protects `/metrics`). The session token is stored in an httpOnly cookie.
+modules/transfers/
+  transfers.routes.ts     HTTP: parse, call the service, map errors to responses
+  transfers.service.ts    Transaction: locks, ledger entries, outbox, idempotency record
+  transfer.rules.ts       Pure business rules (ownership, currency, funds)
+  transfer-confirmation.service.ts   Step-up codes for large transfers
+```
 
-### 2. Start Infrastructure
+Other modules: `auth`, `security` (sessions, JWT, TOTP, lockout, mailer), `audit`, `accounts`, `transactions`, `analytics`, `fx`, `cards`, `contacts`, `fraud`, `outbox`, `webhooks`, `reconciliation`, `health`.
+
+### Life of a transfer
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant R as Route
+    participant F as Fraud engine
+    participant S as Service (DB transaction)
+    C->>R: POST /transfers (Idempotency-Key)
+    R->>R: Auth, verified email, rate limit
+    R->>R: Replay stored response if the key was seen
+    R->>F: Assess risk (log it, block if too risky)
+    alt amount >= threshold
+        R-->>C: 202 confirmation required (code by email or authenticator)
+        C->>R: Same request + confirmation_id + code
+    end
+    R->>S: createTransfer
+    S->>S: Lock both accounts (stable order)
+    S->>S: Check owner, currency, balance
+    S->>S: Ledger entries + transfer + outbox event + idempotency record
+    S-->>C: 201 SUCCESS
+```
+
+### Data model (core tables)
+
+```mermaid
+erDiagram
+    users ||--o{ accounts : owns
+    users ||--o{ sessions : has
+    users ||--o{ cards : holds
+    accounts ||--o{ ledger_entries : "has legs"
+    ledger_transactions ||--|{ ledger_entries : "balanced set"
+    accounts ||--o{ transfers : "source / destination"
+    users ||--o{ transfer_confirmations : requests
+    users ||--o{ one_time_tokens : receives
+    users ||--o{ contacts : saves
+```
+
+Supporting tables: `idempotency_keys`, `outbox_events`, `webhook_events`, `exchange_rates`, `risk_logs`, `audit_log` (append-only). Platform money enters and leaves through per-currency **system clearing accounts**, so even top-ups and exchanges are fully balanced entries.
+
+---
+
+## Getting started
+
+**Prerequisites:** Node.js 20+, Docker (for PostgreSQL and Redis).
+
 ```bash
+# 1. Configure
+cp .env.example .env            # then set JWT_SECRET and API_KEY
+
+# 2. Start PostgreSQL and Redis
 docker-compose up -d
-```
 
-### 3. Install Dependencies (all workspaces)
-```bash
+# 3. Install all workspaces and apply migrations
 npm install
-```
-
-### 4. Run Database Migrations
-```bash
 npm run db:migrate
+
+# 4. Run the API (http://localhost:3001) and the web app (http://localhost:3000)
+npm run dev
+npm run dev:web                 # in a second terminal
 ```
 
-### 5. Run the apps
-```bash
-npm run dev       # API on http://localhost:3001 (PORT in .env)
-npm run dev:web   # Web on http://localhost:3000 (proxies /api to the API)
-```
+Open <http://localhost:3000> and:
 
-### 6. Quality checks
-Integration tests wipe tables, so they run against a separate database named `paycore_test` (override with `TEST_DATABASE_URL`; the name must end with `_test`). It is created automatically on the first run (or manually):
-```bash
-docker exec paycore-db-1 psql -U paycore -d postgres -c "CREATE DATABASE paycore_test;"
-```
+1. **Register.** A verification email is *printed in the API terminal* (look for `--- EMAIL to … ---`); open the link to verify.
+2. **Top up** an account from the dashboard to get started.
+3. Register a second user (or use the contact search) and **send a transfer**.
+4. Try **Exchange**, **Transactions** (filters, CSV export) and **Settings → Security** (2FA, sessions).
+5. Send an amount at or above the threshold (default 1,000.00) to see the confirmation step; the code appears in the API log.
+
+Generate secrets with:
 
 ```bash
-npm run lint
-npm run typecheck
-npm test                    # unit tests (API + web)
-npm run test:integration    # real Postgres + Redis integration tests
-npm run format:check
-```
-
-### 7. Run Load Tests (k6)
-Ensure your API and database are running, then install `k6` and execute:
-```bash
-k6 run load-tests/transfers-load.js
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
 ---
 
-## 📈 Roadmap & Future Stages
-- [x] Project Bootstrap & PostgreSQL integration
-- [x] Users & Accounts modules with strict constraints
-- [x] Transactional Transfers with Row-Level Locking
-- [x] Double-Entry Ledger (ledger_transactions & ledger_entries)
-- [x] Idempotency Keys (Preventing double charges on client retries)
-- [x] Asynchronous Processing (Outbox pattern + Queues & Workers with SKIP LOCKED)
-- [x] Payment Gateway Simulator & Webhook Ingestion (Handling duplicates & idempotency)
-- [x] Failure Recovery & Reconciliation (Stale event detection and self-healing)
-- [x] Observability & Structured Tracing (Request-ID correlation & system metrics)
-- [x] Security (API Key Auth & Redis Rate Limiting)
-- [x] Load Testing & Concurrency Storms
+## Configuration
+
+Everything is read from a single `.env` at the repository root (see [`.env.example`](.env.example)).
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `DATABASE_URL` | PostgreSQL connection string | local docker database |
+| `PORT` / `HOST` | API port / bind address (use `0.0.0.0` only inside a container). The web app proxies to port **3001**, which is what `.env.example` sets. | `3000` / `127.0.0.1` |
+| `REDIS_HOST` / `REDIS_PORT` | Redis for rate limiting | `127.0.0.1` / `6379` |
+| `JWT_SECRET` | Signs access tokens. **Set your own.** | insecure dev fallback |
+| `API_KEY` | Protects `/metrics` | insecure dev fallback |
+| `ENCRYPTION_KEY` | 32 bytes as 64 hex chars; encrypts TOTP secrets. **Required in production.** | derived in development |
+| `CORS_ORIGINS` | Allowed browser origins (also used for CSRF origin checks) | `http://localhost:3000` |
+| `WEB_URL` | Base URL used in email links | `http://localhost:3000` |
+| `ACCESS_TOKEN_TTL_SECONDS` / `REFRESH_TOKEN_TTL_SECONDS` | Token lifetimes | 900 / 2592000 |
+| `MAX_FAILED_LOGINS` / `LOCKOUT_MINUTES` | Lockout policy | 5 / 15 |
+| `LARGE_TRANSFER_THRESHOLD` | Minor units; transfers at or above need a code (`0` disables) | `100000` |
+| `ENABLE_DEMO_TOPUP` | Demo top-ups; on outside production, off in production unless set | — |
+| `WEBHOOK_TARGET_URL` | Where the outbox worker delivers events | unset (delivery skipped) |
+| `TEST_DATABASE_URL` | Database for integration tests (name must end with `_test`) | `…/paycore_test` |
+
+---
+
+## Scripts
+
+Run from the repository root:
+
+| Command | What it does |
+|---|---|
+| `npm run dev` | API with auto-reload |
+| `npm run dev:web` | Next.js dev server |
+| `npm run db:migrate` | Apply pending SQL migrations |
+| `npm test` | Unit tests (API and web) |
+| `npm run test:integration` | Integration tests against the test database |
+| `npm run typecheck` | TypeScript check of both apps |
+| `npm run lint` / `npm run format:check` | ESLint / Prettier |
+| `npm run build` | Production build of both apps |
+
+Load test (needs [k6](https://k6.io) and a running API): `k6 run load-tests/transfers-load.js`.
+
+---
+
+## Testing
+
+- **Unit tests** cover the pure logic: transfer rules, analytics calculations, TOTP (checked against the RFC 6238 test vectors), lockout policy, token handling, cursor/CSV helpers, and on the web side formatting, balance math, onboarding, filters and components.
+- **Integration tests** run the real Fastify app against PostgreSQL and Redis: auth flows, token rotation and reuse detection, lockout, 2FA, confirmation of large transfers, idempotency, a concurrency storm, transaction history and exports, top-up limits (including a concurrent race), webhooks and the outbox.
+- A **test guarantees the four translation files** define the same keys and placeholders.
+
+Integration tests truncate tables, so they use a **separate database** (`paycore_test`, created and migrated automatically on first run). They refuse to run against any database whose name does not end in `_test`.
+
+CI (GitHub Actions) runs install, lint, unit tests, type check, migrations and the integration suite against fresh PostgreSQL and Redis services.
+
+---
+
+## API overview
+
+All routes except health and auth are authenticated by the session cookie (or a `Bearer` access token for API clients).
+
+| Area | Endpoints |
+|---|---|
+| **Auth** | `POST /auth/register`, `/login`, `/refresh`, `/logout`, `/logout-all` · `GET /auth/me`, `/sessions`, `/audit-log` · `DELETE /auth/sessions/:id` |
+| **Email & passwords** | `POST /auth/email/verify`, `/email/resend`, `/password/forgot`, `/password/reset`, `/password/change` |
+| **Two-factor** | `POST /auth/2fa/setup`, `/2fa/enable`, `/2fa/disable` |
+| **Accounts** | `GET /accounts`, `/accounts/options`, `/accounts/:id/ledger` · `POST /accounts`, `/accounts/:id/top-up` · `PATCH /accounts/:id/close` |
+| **Transfers** | `POST /transfers` (requires `Idempotency-Key`) |
+| **Transactions** | `GET /transactions` (filters + cursor), `GET /transactions/export` (CSV) |
+| **Exchange** | `GET /fx/rates` · `POST /fx/convert` |
+| **Analytics** | `GET /analytics/summary`, `/analytics/portfolio` |
+| **Cards** | `GET /cards` · `POST /cards`, `/cards/:id/freeze`, `/unfreeze`, `/pin` |
+| **Contacts** | `GET /contacts` · `POST /contacts`, `/contacts/search` |
+| **Ops** | `GET /health`, `/health/db`, `/metrics` (API key) · `POST /webhooks/provider` |
+
+Errors are JSON with a stable `code` and a human-readable `message`. Every response carries an `X-Request-Id`.
+
+---
+
+## Security model
+
+- **Sessions:** 15-minute access token and a rotating refresh token, both in `httpOnly`, `SameSite=Strict` cookies (`Secure` in production). Nothing sensitive lives in `localStorage`.
+- **Revocation is immediate:** each access token carries a session id that is checked against the database.
+- **CSRF:** `SameSite=Strict` plus an `Origin` check on cookie-authenticated writes.
+- **Passwords:** bcrypt, 8–72 characters; reset links are single-use, expire after an hour and sign out every device.
+- **Two-factor:** TOTP with ±1 step of clock drift, secrets encrypted at rest, codes cannot be replayed.
+- **Headers and exposure:** `helmet`, a strict CORS allow-list, API bound to loopback by default, `/metrics` behind an API key.
+- **Auditability:** sign-ins, failures, security changes, transfers, cards and exports are recorded in an append-only table.
+
+---
+
+## Limitations and ideas
+
+Honest scope notes for a sandbox project:
+
+- Top-ups and exchange rates are **simulated**; there is no card processor, bank rail or live FX feed.
+- Emails are **logged, not sent**. Plug a provider into `setMailer()` (`apps/api/src/modules/security/mailer.ts`).
+- Spending categories are keyword-based; the reconciliation service exists and is tested but is not scheduled.
+- `JWT_SECRET` and `API_KEY` fall back to insecure development values if unset. Always set them outside local development.
+
+Ideas for next steps: SMTP delivery, 2FA recovery codes, scheduled and recurring payments, statements as PDF, an operator back-office with roles, and end-to-end browser tests.
