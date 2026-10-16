@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    // The old Investments page showed mock data; currency exchange replaced it
+    return [{ source: '/investments', destination: '/exchange', permanent: false }];
+  },
   async rewrites() {
     return [
       {
@@ -17,4 +24,4 @@ const nextConfig: NextConfig = {
   }
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

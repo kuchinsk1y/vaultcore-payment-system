@@ -1,0 +1,213 @@
+{
+  "Dashboard": {
+    "title": "Przegląd portfela",
+    "totalBalance": "Całkowite saldo",
+    "recentActivity": "Ostatnia aktywność",
+    "noActivity": "Brak ostatniej aktywności.",
+    "income": "Przychody",
+    "expenses": "Wydatki",
+    "openAccount": "Otwórz konto",
+    "transfer": "Przelew",
+    "welcome": "Witaj ponownie, {name}",
+    "welcomeGeneric": "Witaj ponownie",
+    "balanceNote": "Ze wszystkich kont, przeliczone na EUR",
+    "change30d": "w ciągu 30 dni",
+    "yourAccounts": "Twoje konta",
+    "accountsCount": "{count, plural, one {# konto} few {# konta} many {# kont} other {# konta}}",
+    "accountEnding": "Kończy się na {last4}",
+    "topUp": "Zasil",
+    "exchange": "Wymiana",
+    "cards": "Karty",
+    "thisMonth": "Ten miesiąc",
+    "performance": "Saldo z ostatnich 30 dni",
+    "spending": "Wydatki w tym miesiącu",
+    "noSpending": "W tym miesiącu nie ma jeszcze wydatków.",
+    "noHistory": "Historia salda pojawi się po pierwszym zasileniu.",
+    "recentTitle": "Ostatnia aktywność",
+    "viewAll": "Zobacz wszystko",
+    "noTransactions": "Brak operacji. Zasil konto, aby zacząć.",
+    "showBalances": "Pokaż kwoty",
+    "hideBalances": "Ukryj kwoty",
+    "sectionError": "Nie udało się wczytać tej sekcji.",
+    "hiddenAmount": "••••",
+    "quickActions": "Szybkie akcje"
+  },
+  "Navigation": {
+    "dashboard": "Pulpit",
+    "accounts": "Konta",
+    "transfers": "Przelewy",
+    "cards": "Karty",
+    "settings": "Ustawienia",
+    "logout": "Wyloguj się",
+    "transactions": "Operacje",
+    "exchange": "Wymiana"
+  },
+  "Accounts": {
+    "title": "Twoje konta",
+    "openNew": "Otwórz nowe konto",
+    "active": "Aktywne",
+    "currency": "Waluta",
+    "createTitle": "Wybierz walutę",
+    "createDesc": "Wybierz walutę dla swojego nowego konta Vault.",
+    "cancel": "Anuluj",
+    "confirm": "Potwierdź",
+    "closeAccount": "Zamknij konto",
+    "closeConfirm": "Czy na pewno chcesz zamknąć to konto?",
+    "closeError": "Saldo musi wynosić 0, aby zamknąć konto"
+  },
+  "Transfers": {
+    "title": "Przelewy",
+    "internal": "Między moimi kontami",
+    "external": "Do innego użytkownika",
+    "source": "Z",
+    "destination": "Do",
+    "amount": "Kwota",
+    "send": "Wyślij przelew",
+    "success": "Przelew zakończony sukcesem",
+    "successDesc": "Twój przelew został zrealizowany, a księga zaktualizowana."
+  },
+  "Cards": {
+    "title": "Twoje karty",
+    "virtual": "Karta wirtualna",
+    "physical": "Karta fizyczna",
+    "frozen": "Zamrożona",
+    "active": "Aktywna",
+    "freeze": "Zamroź kartę",
+    "unfreeze": "Odmroź kartę",
+    "changePin": "Zmień PIN",
+    "reveal": "Pokaż szczegóły",
+    "pinTitle": "Ustaw nowy PIN",
+    "pinDesc": "Wprowadź nowy 4-cyfrowy kod PIN dla tej karty.",
+    "save": "Zapisz PIN",
+    "issue": "Wydaj nową kartę"
+  },
+  "Settings": {
+    "title": "Ustawienia",
+    "appearance": "Wygląd",
+    "language": "Język",
+    "light": "Jasny",
+    "dark": "Ciemny",
+    "system": "System"
+  },
+  "Common": {
+    "cancel": "Anuluj",
+    "close": "Zamknij",
+    "retry": "Spróbuj ponownie",
+    "loading": "Ładowanie…",
+    "optional": "opcjonalnie"
+  },
+  "GettingStarted": {
+    "title": "Pierwsze kroki",
+    "progress": "Ukończono {done} z {total}",
+    "verifyEmail": {
+      "title": "Potwierdź e-mail",
+      "desc": "Wymagane, aby wysyłać pieniądze.",
+      "cta": "Wyślij ponownie"
+    },
+    "topUp": {
+      "title": "Zasil konto",
+      "desc": "Zasil konto, aby wypróbować przelewy.",
+      "cta": "Zasil"
+    },
+    "transfer": {
+      "title": "Pierwszy przelew",
+      "desc": "Wyślij pieniądze do kontaktu lub na inne konto.",
+      "cta": "Przelew"
+    },
+    "card": {
+      "title": "Wydaj kartę",
+      "desc": "Utwórz kartę wirtualną powiązaną z kontem.",
+      "cta": "Karty"
+    },
+    "twoFactor": {
+      "title": "Włącz weryfikację dwuetapową",
+      "desc": "Chroni logowanie i duże przelewy.",
+      "cta": "Bezpieczeństwo"
+    },
+    "emailSent": "E-mail wysłany",
+    "done": "Ukończono"
+  },
+  "Transactions": {
+    "title": "Operacje",
+    "subtitle": "Wszystkie ruchy na Twoich kontach",
+    "searchPlaceholder": "Szukaj po nazwie lub opisie",
+    "searchLabel": "Szukaj operacji",
+    "allAccounts": "Wszystkie konta",
+    "allTypes": "Wszystkie typy",
+    "allDirections": "Przychodzące i wychodzące",
+    "incoming": "Przychodzące",
+    "outgoing": "Wychodzące",
+    "from": "Od",
+    "to": "Do",
+    "clear": "Wyczyść filtry",
+    "export": "Eksportuj CSV",
+    "loadMore": "Pokaż więcej",
+    "empty": "Brak operacji pasujących do filtrów.",
+    "emptyNone": "Brak operacji.",
+    "today": "Dzisiaj",
+    "yesterday": "Wczoraj",
+    "transferTo": "Przelew do {name}",
+    "transferFrom": "Przelew od {name}",
+    "transferGeneric": "Przelew",
+    "exchange": "Wymiana waluty",
+    "topUp": "Zasilenie",
+    "deposit": "Wpłata",
+    "other": "Operacja",
+    "ownAccount": "Twoje drugie konto",
+    "kind": {
+      "TRANSFER": "Przelew",
+      "EXCHANGE": "Wymiana",
+      "TOP_UP": "Zasilenie",
+      "DEPOSIT": "Wpłata",
+      "OTHER": "Inne"
+    },
+    "error": "Nie udało się wczytać operacji."
+  },
+  "TopUp": {
+    "title": "Zasil konto",
+    "desc": "Dodaj środki demo. To piaskownica, prawdziwe pieniądze się nie przemieszczają.",
+    "account": "Konto",
+    "amount": "Kwota",
+    "limits": "Do {perRequest} jednorazowo i {daily} na 24 godziny.",
+    "submit": "Dodaj środki",
+    "submitting": "Zasilanie…",
+    "success": "Dodano {amount} do konta.",
+    "disabled": "Zasilenia są wyłączone w tym środowisku.",
+    "invalidAmount": "Podaj kwotę większą od zera.",
+    "overLimit": "Kwota przekracza limit jednego zasilenia.",
+    "dailyLimit": "Osiągnięto dobowy limit zasileń.",
+    "quick": "Szybkie kwoty"
+  },
+  "OpenAccount": {
+    "title": "Otwórz konto",
+    "desc": "Wybierz walutę. W każdej walucie możesz mieć jedno aktywne konto.",
+    "currency": "Waluta",
+    "submit": "Otwórz konto",
+    "submitting": "Otwieranie…",
+    "none": "Masz już konto w każdej dostępnej walucie.",
+    "success": "Twoje konto w {currency} jest gotowe."
+  },
+  "Exchange": {
+    "title": "Wymiana walut",
+    "subtitle": "Wymieniaj środki między własnymi kontami po aktualnym kursie.",
+    "from": "Z konta",
+    "to": "Na konto",
+    "amount": "Kwota",
+    "rate": "Kurs",
+    "youGet": "Otrzymasz",
+    "submit": "Wymień",
+    "submitting": "Wymiana…",
+    "needTwo": "Do wymiany potrzebujesz kont w co najmniej dwóch walutach. Najpierw otwórz kolejne konto.",
+    "openAccount": "Otwórz konto",
+    "rates": "Kursy walut",
+    "ratesNote": "Orientacyjne kursy platformy.",
+    "success": "Wymieniono {from} na {to}.",
+    "available": "Dostępne: {amount}",
+    "errors": {
+      "INSUFFICIENT_FUNDS": "Brak wystarczających środków na koncie źródłowym.",
+      "SAME_CURRENCY": "Wybierz konta w różnych walutach.",
+      "EXCHANGE_RATE_NOT_FOUND": "Brak kursu dla tej pary.",
+      "default": "Nie udało się zrealizować wymiany."
+    }
+  }
+}

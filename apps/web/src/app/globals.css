@@ -7,35 +7,110 @@
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%; /* #0A0A0B */
-    --foreground: 0 0% 98%;
+    --bg-main: #FBFBF9;
+    --bg-surface: #FFFFFF;
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-hover: rgba(0, 0, 0, 0.15);
+    --text-main: #1A1A1A;
+    --text-muted: #6B7280;
+    --btn-bg: #FFFFFF;
+    --btn-hover: #F3F4F6;
+  }
+  
+  .dark {
+    --bg-main: #0A0A0A;
+    --bg-surface: #0D0D0D;
+    --border-subtle: rgba(255, 255, 255, 0.04);
+    --border-hover: rgba(255, 255, 255, 0.15);
+    --text-main: #F3F4F6;
+    --text-muted: #9CA3AF;
+    --btn-bg: #0D0D0D;
+    --btn-hover: #111111;
   }
 
   body {
-    @apply bg-[#0A0A0B] text-[#F3F4F6] font-sans antialiased;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    @apply font-sans antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   
   h1, h2, h3, h4, h5, h6, .font-serif {
     font-family: var(--font-playfair);
   }
+
+  /* Premium Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 10px;
+    transition: background-color 0.3s;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(212, 175, 55, 0.4);
+  }
+  
+  /* For Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-subtle) transparent;
+  }
 }
 
 @layer utilities {
   .surface-premium {
-    @apply bg-[#121214] border border-white/[0.04] transition-all duration-500 ease-out;
-    box-shadow: 0 4px 20px -2px rgba(0,0,0,0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.02);
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    @apply transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)];
   }
 
   .input-premium {
-    @apply bg-[#0A0A0B] border border-white/[0.06] text-[#E5E7EB] placeholder-[#6B7280] focus:border-[#C5A059]/50 focus:ring-1 focus:ring-[#C5A059]/20 rounded-lg transition-all duration-500 ease-out shadow-inner;
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-main);
+    @apply outline-none transition-colors duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-[#D4AF37]/50;
+  }
+  .input-premium::placeholder {
+    color: var(--text-muted);
   }
 
   .btn-luxury {
-    @apply bg-[#1C1C1E] text-white border border-[#C5A059]/30 hover:bg-[#252528] hover:border-[#C5A059]/60 shadow-lg shadow-black/40 font-medium rounded-lg transition-all duration-500 ease-out;
+    background-color: var(--btn-bg);
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
+    @apply font-medium transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)];
+  }
+  .btn-luxury:hover {
+    color: var(--text-main);
+    border-color: var(--border-hover);
   }
   
   .btn-gold {
-    @apply bg-gradient-to-br from-[#D4AF37] to-[#B38F2B] hover:from-[#E5C048] hover:to-[#C4A03C] text-black font-semibold shadow-lg shadow-[#D4AF37]/20 rounded-lg transition-all duration-500 ease-out;
+    background-color: var(--btn-bg);
+    color: #D4AF37;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    @apply font-medium transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] hover:border-[#D4AF37]/60 hover:text-[#E5C048];
+  }
+  .btn-gold:hover {
+    background-color: var(--btn-hover);
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+  .rotate-y-180 {
+    transform: rotateY(180deg);
   }
 }

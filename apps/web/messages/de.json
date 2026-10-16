@@ -1,0 +1,213 @@
+{
+  "Dashboard": {
+    "title": "Portfolio-Übersicht",
+    "totalBalance": "Gesamtsaldo",
+    "recentActivity": "Letzte Aktivität",
+    "noActivity": "Keine aktuelle Aktivität gefunden.",
+    "income": "Einnahmen",
+    "expenses": "Ausgaben",
+    "openAccount": "Konto eröffnen",
+    "transfer": "Überweisung",
+    "welcome": "Willkommen zurück, {name}",
+    "welcomeGeneric": "Willkommen zurück",
+    "balanceNote": "Über alle Konten, in EUR umgerechnet",
+    "change30d": "in 30 Tagen",
+    "yourAccounts": "Ihre Konten",
+    "accountsCount": "{count, plural, one {# Konto} other {# Konten}}",
+    "accountEnding": "Endet auf {last4}",
+    "topUp": "Aufladen",
+    "exchange": "Wechseln",
+    "cards": "Karten",
+    "thisMonth": "Dieser Monat",
+    "performance": "Kontostand der letzten 30 Tage",
+    "spending": "Ausgaben diesen Monat",
+    "noSpending": "Diesen Monat noch keine Ausgaben.",
+    "noHistory": "Der Verlauf erscheint, sobald Sie Guthaben aufladen.",
+    "recentTitle": "Letzte Aktivität",
+    "viewAll": "Alle anzeigen",
+    "noTransactions": "Noch keine Umsätze. Laden Sie ein Konto auf, um zu starten.",
+    "showBalances": "Beträge anzeigen",
+    "hideBalances": "Beträge ausblenden",
+    "sectionError": "Dieser Bereich konnte nicht geladen werden.",
+    "hiddenAmount": "••••",
+    "quickActions": "Schnellaktionen"
+  },
+  "Navigation": {
+    "dashboard": "Dashboard",
+    "accounts": "Konten",
+    "transfers": "Überweisungen",
+    "cards": "Karten",
+    "settings": "Einstellungen",
+    "logout": "Abmelden",
+    "transactions": "Umsätze",
+    "exchange": "Wechseln"
+  },
+  "Accounts": {
+    "title": "Ihre Konten",
+    "openNew": "Neues Konto eröffnen",
+    "active": "Aktiv",
+    "currency": "Währung",
+    "createTitle": "Währung wählen",
+    "createDesc": "Wählen Sie eine Währung für Ihr neues Vault-Konto.",
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen",
+    "closeAccount": "Konto schließen",
+    "closeConfirm": "Möchten Sie dieses Konto wirklich schließen?",
+    "closeError": "Der Saldo muss 0 betragen, um das Konto zu schließen"
+  },
+  "Transfers": {
+    "title": "Überweisungen",
+    "internal": "Zwischen meinen Konten",
+    "external": "An einen anderen Benutzer",
+    "source": "Von",
+    "destination": "An",
+    "amount": "Betrag",
+    "send": "Überweisung senden",
+    "success": "Überweisung erfolgreich",
+    "successDesc": "Ihre Überweisung wurde abgeschlossen und das Hauptbuch aktualisiert."
+  },
+  "Cards": {
+    "title": "Ihre Karten",
+    "virtual": "Virtuelle Karte",
+    "physical": "Physische Karte",
+    "frozen": "Gesperrt",
+    "active": "Aktiv",
+    "freeze": "Karte sperren",
+    "unfreeze": "Karte entsperren",
+    "changePin": "PIN ändern",
+    "reveal": "Details anzeigen",
+    "pinTitle": "Neue PIN festlegen",
+    "pinDesc": "Geben Sie einen neuen 4-stelligen PIN-Code für diese Karte ein.",
+    "save": "PIN speichern",
+    "issue": "Neue Karte ausstellen"
+  },
+  "Settings": {
+    "title": "Einstellungen",
+    "appearance": "Erscheinungsbild",
+    "language": "Sprache",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "system": "System"
+  },
+  "Common": {
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "retry": "Erneut versuchen",
+    "loading": "Lädt…",
+    "optional": "optional"
+  },
+  "GettingStarted": {
+    "title": "Erste Schritte",
+    "progress": "{done} von {total} erledigt",
+    "verifyEmail": {
+      "title": "E-Mail bestätigen",
+      "desc": "Erforderlich, um Geld zu senden.",
+      "cta": "E-Mail erneut senden"
+    },
+    "topUp": {
+      "title": "Guthaben aufladen",
+      "desc": "Laden Sie ein Konto auf, um Überweisungen zu testen.",
+      "cta": "Aufladen"
+    },
+    "transfer": {
+      "title": "Erste Überweisung",
+      "desc": "Senden Sie Geld an einen Kontakt oder ein anderes Konto.",
+      "cta": "Überweisen"
+    },
+    "card": {
+      "title": "Karte ausstellen",
+      "desc": "Erstellen Sie eine virtuelle Karte für Ihr Konto.",
+      "cta": "Karten"
+    },
+    "twoFactor": {
+      "title": "Zwei-Faktor aktivieren",
+      "desc": "Schützt Anmeldung und hohe Überweisungen.",
+      "cta": "Sicherheit"
+    },
+    "emailSent": "E-Mail gesendet",
+    "done": "Erledigt"
+  },
+  "Transactions": {
+    "title": "Umsätze",
+    "subtitle": "Alle Bewegungen auf Ihren Konten",
+    "searchPlaceholder": "Nach Name oder Beschreibung suchen",
+    "searchLabel": "Umsätze durchsuchen",
+    "allAccounts": "Alle Konten",
+    "allTypes": "Alle Arten",
+    "allDirections": "Ein- und Ausgänge",
+    "incoming": "Eingänge",
+    "outgoing": "Ausgänge",
+    "from": "Von",
+    "to": "Bis",
+    "clear": "Filter zurücksetzen",
+    "export": "CSV exportieren",
+    "loadMore": "Mehr laden",
+    "empty": "Keine Umsätze für diese Filter.",
+    "emptyNone": "Noch keine Umsätze.",
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "transferTo": "Überweisung an {name}",
+    "transferFrom": "Überweisung von {name}",
+    "transferGeneric": "Überweisung",
+    "exchange": "Währungswechsel",
+    "topUp": "Aufladung",
+    "deposit": "Einzahlung",
+    "other": "Umsatz",
+    "ownAccount": "Ihr anderes Konto",
+    "kind": {
+      "TRANSFER": "Überweisung",
+      "EXCHANGE": "Wechsel",
+      "TOP_UP": "Aufladung",
+      "DEPOSIT": "Einzahlung",
+      "OTHER": "Sonstiges"
+    },
+    "error": "Ihre Umsätze konnten nicht geladen werden."
+  },
+  "TopUp": {
+    "title": "Konto aufladen",
+    "desc": "Demo-Guthaben hinzufügen. Das ist eine Sandbox, es bewegt sich kein echtes Geld.",
+    "account": "Konto",
+    "amount": "Betrag",
+    "limits": "Bis zu {perRequest} pro Aufladung und {daily} je 24 Stunden.",
+    "submit": "Guthaben hinzufügen",
+    "submitting": "Wird aufgeladen…",
+    "success": "{amount} wurden Ihrem Konto gutgeschrieben.",
+    "disabled": "Aufladungen sind in dieser Umgebung deaktiviert.",
+    "invalidAmount": "Geben Sie einen Betrag größer als null ein.",
+    "overLimit": "Das liegt über dem Limit pro Aufladung.",
+    "dailyLimit": "Das 24-Stunden-Limit für Aufladungen ist erreicht.",
+    "quick": "Schnellbeträge"
+  },
+  "OpenAccount": {
+    "title": "Konto eröffnen",
+    "desc": "Wählen Sie eine Währung. Pro Währung ist ein aktives Konto möglich.",
+    "currency": "Währung",
+    "submit": "Konto eröffnen",
+    "submitting": "Wird eröffnet…",
+    "none": "Sie haben bereits ein Konto in jeder verfügbaren Währung.",
+    "success": "Ihr {currency}-Konto ist bereit."
+  },
+  "Exchange": {
+    "title": "Währungswechsel",
+    "subtitle": "Wechseln Sie zwischen Ihren eigenen Konten zum aktuellen Kurs.",
+    "from": "Von",
+    "to": "Nach",
+    "amount": "Betrag",
+    "rate": "Kurs",
+    "youGet": "Sie erhalten",
+    "submit": "Wechseln",
+    "submitting": "Wird gewechselt…",
+    "needTwo": "Zum Wechseln brauchen Sie Konten in mindestens zwei Währungen. Eröffnen Sie zuerst ein weiteres Konto.",
+    "openAccount": "Konto eröffnen",
+    "rates": "Wechselkurse",
+    "ratesNote": "Richtwerte der Plattform.",
+    "success": "{from} in {to} gewechselt.",
+    "available": "Verfügbar: {amount}",
+    "errors": {
+      "INSUFFICIENT_FUNDS": "Nicht genug Guthaben auf dem Quellkonto.",
+      "SAME_CURRENCY": "Wählen Sie Konten in unterschiedlichen Währungen.",
+      "EXCHANGE_RATE_NOT_FOUND": "Für dieses Paar ist kein Kurs verfügbar.",
+      "default": "Der Wechsel konnte nicht ausgeführt werden."
+    }
+  }
+}

@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Hexagon, AlertTriangle, ArrowRight } from 'lucide-react';
-import { loginUser, setToken, ApiException } from '@/lib/api';
+import { loginUser, ApiException } from '@/lib/api';
+import { useTypewriter } from '@/hooks/useTypewriter';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,6 +13,20 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [totpRequired, setTotpRequired] = useState(false);
+  const [totpCode, setTotpCode] = useState('');
+
+  const emailPlaceholder = useTypewriter([
+    'client@vaultcore.com',
+    'Enter your secure email...',
+    'Authenticate your identity...'
+  ], 60, 30, 2500);
+
+  const passwordPlaceholder = useTypewriter([
+    '••••••••',
+    'Enter your vault password...',
+    'Secure verification required...'
+  ], 60, 30, 2500);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,11 +34,16 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await loginUser({ email, password });
-      setToken(response.token);
-      router.push('/');
-    } catch (err: any) {
-      if (err instanceof ApiException) {
+      const response = await loginUser({ email, password, ...(totpRequired ? { totp_code: totpCode } : {}) });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('vaultcore_user_name', response.user.full_name);
+      }
+      router.push('/dashboard');
+    } catch (err: unknown) {
+      if (err instanceof ApiException && err.code === 'MFA_REQUIRED') {
+        // Password was correct: ask for the authenticator code
+        setTotpRequired(true);
+      } else if (err instanceof ApiException) {
         setError(err.message);
       } else {
         setError('An unexpected error occurred.');
@@ -66,8 +87,10 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onFocus={() => emailPlaceholder.setIsPaused(true)}
+                onBlur={() => emailPlaceholder.setIsPaused(false)}
                 className="w-full bg-transparent border border-white/[0.08] text-white placeholder-zinc-700 focus:border-[#C5A059]/40 focus:ring-1 focus:ring-[#C5A059]/20 hover:border-white/[0.12] rounded-lg py-3.5 px-4 text-sm transition-all duration-300 outline-none"
-                placeholder="client@example.com"
+                placeholder={emailPlaceholder.text}
                 required
               />
             </div>
@@ -75,20 +98,48 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <label className="text-[10px] font-semibold tracking-widest uppercase text-zinc-500">Password</label>
+                <Link href="/forgot-password" className="text-[10px] tracking-widest uppercase text-zinc-500 hover:text-[#C5A059] transition-colors">
+                  Forgot password?
+                </Link>
               </div>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => passwordPlaceholder.setIsPaused(true)}
+                onBlur={() => passwordPlaceholder.setIsPaused(false)}
                 className="w-full bg-transparent border border-white/[0.08] text-white placeholder-zinc-700 focus:border-[#C5A059]/40 focus:ring-1 focus:ring-[#C5A059]/20 hover:border-white/[0.12] rounded-lg py-3.5 px-4 text-sm transition-all duration-300 outline-none tabular-nums"
-                placeholder="••••••••"
+                placeholder={passwordPlaceholder.text}
                 required
               />
             </div>
 
+            {totpRequired && (
+              <div className="space-y-2">
+                <label htmlFor="totp" className="text-[10px] font-semibold tracking-widest uppercase text-zinc-500">
+                  Authenticator Code
+                </label>
+                <input
+                  id="totp"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="\d{6}"
+                  maxLength={6}
+                  autoFocus
+                  value={totpCode}
+                  onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
+                  className="w-full bg-transparent border border-white/[0.08] text-white placeholder-zinc-700 focus:border-[#C5A059]/40 focus:ring-1 focus:ring-[#C5A059]/20 hover:border-white/[0.12] rounded-lg py-3.5 px-4 text-sm tracking-[0.5em] text-center transition-all duration-300 outline-none tabular-nums"
+                  placeholder="000000"
+                  required
+                />
+                <p className="text-[10px] text-zinc-600">Open your authenticator app and enter the 6-digit code.</p>
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={isLoading || !email || !password}
+              disabled={isLoading || !email || !password || (totpRequired && totpCode.length !== 6)}
               className="w-full py-4 mt-4 flex justify-center items-center gap-2 uppercase tracking-widest text-[10px] bg-[#1C1C1E] text-white border border-[#C5A059]/30 hover:bg-[#252528] hover:border-[#C5A059]/60 shadow-lg shadow-black/40 font-medium rounded-lg transition-all duration-500 ease-out disabled:opacity-50 disabled:cursor-not-allowed group"
             >
               {isLoading ? 'Authenticating...' : 'Sign In'}

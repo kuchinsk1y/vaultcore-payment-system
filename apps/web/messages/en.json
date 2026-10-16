@@ -1,0 +1,213 @@
+{
+  "Dashboard": {
+    "title": "Portfolio Overview",
+    "totalBalance": "Total Balance",
+    "recentActivity": "Recent Activity",
+    "noActivity": "No recent activity found.",
+    "income": "Income",
+    "expenses": "Expenses",
+    "openAccount": "Open account",
+    "transfer": "Transfer",
+    "welcome": "Welcome back, {name}",
+    "welcomeGeneric": "Welcome back",
+    "balanceNote": "Across all accounts, converted to EUR",
+    "change30d": "last 30 days",
+    "yourAccounts": "Your accounts",
+    "accountsCount": "{count, plural, one {# account} other {# accounts}}",
+    "accountEnding": "Ending {last4}",
+    "topUp": "Top up",
+    "exchange": "Exchange",
+    "cards": "Cards",
+    "thisMonth": "This month",
+    "performance": "Balance, last 30 days",
+    "spending": "Spending this month",
+    "noSpending": "No spending this month yet.",
+    "noHistory": "Your balance history will appear here once you add funds.",
+    "recentTitle": "Recent activity",
+    "viewAll": "View all",
+    "noTransactions": "No transactions yet. Top up an account to get started.",
+    "showBalances": "Show balances",
+    "hideBalances": "Hide balances",
+    "sectionError": "We could not load this section.",
+    "hiddenAmount": "••••",
+    "quickActions": "Quick actions"
+  },
+  "Navigation": {
+    "dashboard": "Dashboard",
+    "accounts": "Accounts",
+    "transfers": "Transfers",
+    "cards": "Cards",
+    "settings": "Settings",
+    "logout": "Log Out",
+    "transactions": "Transactions",
+    "exchange": "Exchange"
+  },
+  "Accounts": {
+    "title": "Your Accounts",
+    "openNew": "Open New Account",
+    "active": "Active",
+    "currency": "Currency",
+    "createTitle": "Select Currency",
+    "createDesc": "Choose a currency for your new Vault account.",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "closeAccount": "Close Account",
+    "closeConfirm": "Are you sure you want to close this account?",
+    "closeError": "Balance must be 0 to close account"
+  },
+  "Transfers": {
+    "title": "Transfers",
+    "internal": "Between My Accounts",
+    "external": "To Another User",
+    "source": "From",
+    "destination": "To",
+    "amount": "Amount",
+    "send": "Send Transfer",
+    "success": "Transfer Successful",
+    "successDesc": "Your transfer has been completed and ledger updated."
+  },
+  "Cards": {
+    "title": "Your Cards",
+    "virtual": "Virtual Card",
+    "physical": "Physical Card",
+    "frozen": "Frozen",
+    "active": "Active",
+    "freeze": "Freeze Card",
+    "unfreeze": "Unfreeze Card",
+    "changePin": "Change PIN",
+    "reveal": "Reveal Details",
+    "pinTitle": "Set New PIN",
+    "pinDesc": "Enter a new 4-digit PIN code for this card.",
+    "save": "Save PIN",
+    "issue": "Issue New Card"
+  },
+  "Settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "language": "Language",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "Common": {
+    "cancel": "Cancel",
+    "close": "Close",
+    "retry": "Try again",
+    "loading": "Loading…",
+    "optional": "optional"
+  },
+  "GettingStarted": {
+    "title": "Get started",
+    "progress": "{done} of {total} done",
+    "verifyEmail": {
+      "title": "Verify your email",
+      "desc": "Required before you can send money.",
+      "cta": "Resend email"
+    },
+    "topUp": {
+      "title": "Add funds",
+      "desc": "Top up an account to try transfers.",
+      "cta": "Top up"
+    },
+    "transfer": {
+      "title": "Make your first transfer",
+      "desc": "Send money to a saved contact or another account.",
+      "cta": "Transfer"
+    },
+    "card": {
+      "title": "Issue a card",
+      "desc": "Create a virtual card linked to your account.",
+      "cta": "Cards"
+    },
+    "twoFactor": {
+      "title": "Turn on two-factor",
+      "desc": "Protect sign-in and large transfers.",
+      "cta": "Security"
+    },
+    "emailSent": "Email sent",
+    "done": "Completed"
+  },
+  "Transactions": {
+    "title": "Transactions",
+    "subtitle": "Every movement across all your accounts",
+    "searchPlaceholder": "Search by name or description",
+    "searchLabel": "Search transactions",
+    "allAccounts": "All accounts",
+    "allTypes": "All types",
+    "allDirections": "In and out",
+    "incoming": "Incoming",
+    "outgoing": "Outgoing",
+    "from": "From",
+    "to": "To",
+    "clear": "Clear filters",
+    "export": "Export CSV",
+    "loadMore": "Load more",
+    "empty": "No transactions match your filters.",
+    "emptyNone": "No transactions yet.",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "transferTo": "Transfer to {name}",
+    "transferFrom": "Transfer from {name}",
+    "transferGeneric": "Transfer",
+    "exchange": "Currency exchange",
+    "topUp": "Top-up",
+    "deposit": "Deposit",
+    "other": "Transaction",
+    "ownAccount": "your other account",
+    "kind": {
+      "TRANSFER": "Transfer",
+      "EXCHANGE": "Exchange",
+      "TOP_UP": "Top-up",
+      "DEPOSIT": "Deposit",
+      "OTHER": "Other"
+    },
+    "error": "We could not load your transactions."
+  },
+  "TopUp": {
+    "title": "Top up account",
+    "desc": "Add demo funds. This is a sandbox, so no real money moves.",
+    "account": "Account",
+    "amount": "Amount",
+    "limits": "Up to {perRequest} per top-up and {daily} per 24 hours.",
+    "submit": "Add funds",
+    "submitting": "Adding…",
+    "success": "Added {amount} to your account.",
+    "disabled": "Top-ups are turned off in this environment.",
+    "invalidAmount": "Enter an amount greater than zero.",
+    "overLimit": "That is above the per-top-up limit.",
+    "dailyLimit": "You have reached the 24-hour top-up limit.",
+    "quick": "Quick amounts"
+  },
+  "OpenAccount": {
+    "title": "Open an account",
+    "desc": "Choose a currency. You can hold one active account per currency.",
+    "currency": "Currency",
+    "submit": "Open account",
+    "submitting": "Opening…",
+    "none": "You already have an account in every available currency.",
+    "success": "Your {currency} account is ready."
+  },
+  "Exchange": {
+    "title": "Currency exchange",
+    "subtitle": "Convert between your own accounts at the current rate.",
+    "from": "From",
+    "to": "To",
+    "amount": "Amount",
+    "rate": "Rate",
+    "youGet": "You receive",
+    "submit": "Exchange",
+    "submitting": "Exchanging…",
+    "needTwo": "You need accounts in at least two currencies to exchange. Open another account first.",
+    "openAccount": "Open an account",
+    "rates": "Exchange rates",
+    "ratesNote": "Indicative platform rates.",
+    "success": "Exchanged {from} for {to}.",
+    "available": "Available: {amount}",
+    "errors": {
+      "INSUFFICIENT_FUNDS": "Not enough funds on the source account.",
+      "SAME_CURRENCY": "Choose accounts in different currencies.",
+      "EXCHANGE_RATE_NOT_FOUND": "No exchange rate is available for this pair.",
+      "default": "The exchange could not be completed."
+    }
+  }
+}
