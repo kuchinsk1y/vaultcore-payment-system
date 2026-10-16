@@ -41,53 +41,103 @@
 
 ---
 
+## 🗂️ Repository Layout
+This is an npm-workspaces monorepo:
+
+```
+apps/
+  api/                 Fastify + Kysely backend (@paycore/api)
+    src/
+      app.ts           Fastify instance: plugins (cookie, helmet, CORS) and route registration
+      server.ts        Entry point: starts background workers and listens
+      config/          Environment loading (reads the root .env)
+      infrastructure/  Database, Redis, middleware
+      modules/         Bounded contexts: routes -> service -> database
+    migrations/        Plain SQL migrations (applied by scripts/migrate.ts)
+    scripts/           migrate.ts and one-off dev scripts (scripts/dev)
+    tests/             unit/ (no I/O) and integration/ (real Postgres + Redis)
+  web/                 Next.js dashboard (App Router, next-intl, Zustand)
+load-tests/            k6 scenarios
+```
+
+Modules keep HTTP concerns in `*.routes.ts`, business logic in `*.service.ts`, and pure rules/calculations
+in separate files (e.g. `transfer.rules.ts`, `analytics.calculations.ts`) so they can be unit-tested without a database.
+
+---
+
+## 🧭 What you can do in the app
+- **Dashboard:** accounts with balances, total balance with a real 30-day change, income/expenses for the month, balance history, spending by category, recent activity, and a getting-started checklist for new users. Every section loads (and fails) independently, with a retry.
+- **Transactions:** full history across accounts with search, filters (account, type, direction, dates), exact keyset pagination and CSV export (formula-injection safe).
+- **Top up / open account:** demo top-ups (a balanced double-entry movement from the platform's clearing account, with per-request and rolling 24h limits; disabled in production by default) and opening an account in any supported currency.
+- **Exchange:** convert between your own accounts at the platform rate, with a live preview that matches what the API credits.
+- **Transfers, cards, settings (security, language, theme):** see below.
+
+The UI is available in English, Russian, German and Polish; a test keeps every locale in sync.
+
+---
+
+## 🔐 Account Security
+- **Sessions:** a 15-minute access token and a rotating refresh token, both in httpOnly, SameSite=Strict cookies. Refresh tokens are stored only as hashes; replaying an already-rotated token revokes the whole session.
+- **Active sessions:** list devices, sign one out, or sign out everywhere (also done automatically on password reset/change).
+- **Brute-force protection:** accounts lock for 15 minutes after 5 failed sign-ins (wrong password or wrong 2FA code), plus per-IP rate limits.
+- **Two-factor authentication:** TOTP (RFC 6238) for any authenticator app. Secrets are encrypted at rest (AES-256-GCM, `ENCRYPTION_KEY`); codes cannot be replayed.
+- **Email verification and password reset:** single-use, expiring links. Transfers require a verified email.
+- **Large transfers:** at or above `LARGE_TRANSFER_THRESHOLD` the API answers `202 CONFIRMATION_REQUIRED`; the client repeats the request with `confirmation_id` + `confirmation_code` (emailed OTP, or the authenticator code if 2FA is on). The code is bound to the exact transfer and is single-use.
+- **Audit log:** an append-only trail (enforced by a database trigger) of sign-ins, security changes, transfers, cards, etc. — `GET /auth/audit-log`.
+
+In development emails are not sent: verification links and one-time codes are printed in the API log. Plug a real provider in with `setMailer()` (`modules/security/mailer.ts`).
+
+---
+
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js (v18+)
+- Node.js (v20+)
 - Docker & Docker Compose
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/kuchinsk1y/paycore-payment-system.git
-cd paycore-payment-system
-```
-
-### 2. Environment Setup
-Copy the example environment file:
+### 1. Environment Setup
 ```bash
 cp .env.example .env
 ```
+Set `JWT_SECRET` and `API_KEY` (the API key protects `/metrics`). The session token is stored in an httpOnly cookie.
 
-### 3. Start Infrastructure
-Spin up the PostgreSQL container:
+### 2. Start Infrastructure
 ```bash
 docker-compose up -d
 ```
 
-### 4. Install Dependencies
+### 3. Install Dependencies (all workspaces)
 ```bash
 npm install
 ```
 
-### 5. Run Database Migrations
+### 4. Run Database Migrations
 ```bash
 npm run db:migrate
 ```
 
-### 6. Run Tests
-Run unit/application tests:
+### 5. Run the apps
 ```bash
-npm test
+npm run dev       # API on http://localhost:3001 (PORT in .env)
+npm run dev:web   # Web on http://localhost:3000 (proxies /api to the API)
 ```
 
-Run real database integration tests:
+### 6. Quality checks
+Integration tests wipe tables, so they run against a separate database named `paycore_test` (override with `TEST_DATABASE_URL`; the name must end with `_test`). It is created automatically on the first run (or manually):
 ```bash
-npm run test:integration
+docker exec paycore-db-1 psql -U paycore -d postgres -c "CREATE DATABASE paycore_test;"
+```
+
+```bash
+npm run lint
+npm run typecheck
+npm test                    # unit tests (API + web)
+npm run test:integration    # real Postgres + Redis integration tests
+npm run format:check
 ```
 
 ### 7. Run Load Tests (k6)
-Ensure your API and database are running, then install `k6` and execute the concurrency load test:
+Ensure your API and database are running, then install `k6` and execute:
 ```bash
 k6 run load-tests/transfers-load.js
 ```
